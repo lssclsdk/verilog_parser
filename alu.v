@@ -24,7 +24,7 @@
 * Please feel free to distribute as long as the header is attached.
 *
 *********************************************************************/
- 
+
 module mAlu (
 /* Input */
       PC,
@@ -38,32 +38,29 @@ module mAlu (
 /* Output */
       Zero,
       ALU_result);
- 
+
 parameter pBuswidth  = 8;// dummy width
-
-
-input[pBuswidth-1:0]   PC;
-input[pBuswidth-1:0]   ReadData1;
+input[pBuswidth-1:0]   PC,ReadData1;
+//input[pBuswidth-1:0]   ReadData1;
 input[pBuswidth-1:0]   ReadData2;
 input[15:0]            Instruction;
 input                  ALUSelA;
 input[1:0]             ALUSelB;
 input[1:0]             ALUOp;
- 
+
 output                 Zero;
 output[pBuswidth-1:0]  ALU_result;
- 
-reg[pBuswidth-1:0]     MuxA;
-reg[pBuswidth-1:0]     MuxB;
+
+reg[pBuswidth-1:0]     MuxA,MuxB;
+//reg[pBuswidth-1:0]     MuxB;
 reg                    Zero;
 reg[pBuswidth-1:0]     ALU_result;
- 
-parameter pZero      = 32'b0;
-parameter pPositive  = 16'h0000;
-parameter pNegative  = 16'hffff;
+
+parameter[31:0] pZero      = 32'b0;
+parameter pPositive  = 16'h0000 , pNegative  = 16'hffff;
 
 /* Multilexer A */
- 
+
 always @(ALUSelA or ReadData1 or PC)
    begin
    if(ALUSelA) begin
@@ -73,9 +70,9 @@ always @(ALUSelA or ReadData1 or PC)
       MuxA=PC;
       end
    end
- 
+
 /* Multiplexer B and sign extender */
- 
+
 always @(ALUSelB or ReadData2 or Instruction)
    begin
    case(ALUSelB[1:0])
@@ -90,10 +87,10 @@ always @(ALUSelB or ReadData2 or Instruction)
                 end
     endcase
     end
- 
- 
+
+
 /* ALU */
- 
+
 always @(ALUOp or Instruction or MuxA or MuxB)
    begin
       casex({ALUOp[1:0],Instruction[5:0]})
@@ -107,7 +104,7 @@ always @(ALUOp or Instruction or MuxA or MuxB)
         8'b10100010 : ALU_result = MuxA - MuxB; // Subtraction
         8'b10000010 : ALU_result = MuxB >> 1;   // Shift right
         8'b10000000 : ALU_result = MuxB << 1;   // Shift left
- 
+
         default: ALU_result = 'bx;
       endcase
 
@@ -118,6 +115,5 @@ always @(ALUOp or Instruction or MuxA or MuxB)
          Zero=0;
          end
    end
- 
+
 endmodule
- 

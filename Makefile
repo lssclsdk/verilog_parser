@@ -1,5 +1,5 @@
 FLAGS = $(TOPFLAGS)
-VERSION = -g 
+VERSION = -g
 #LIB_TYPE = {static,shared}
 LIB_TYPE = $(LIB)
 CXX = $(COMPILER)
@@ -10,11 +10,12 @@ else
    LIB_EXT = a
 endif
 
-OBJECTS = skandr.o
+OBJECTS = iterate_parse_tree_prettyprint.o Visitor.o
 ifeq (,$(findstring "-DUSE_COMREAD",$(TOPFLAGS)))
   INCLUDE = commands
   LINKDIRS = commands
 endif
+
 
 INCLUDE += verilog
 LINKDIRS += verilog
@@ -43,13 +44,11 @@ LINKDIRS += database
 INCLUDE += util containers
 LINKDIRS += util containers
 
-HEADERS = 
-
-COMPILEDIRS = 
+HEADERS = Visitor.h
 
 # 'libxnet' does not seem to be available on older SunOS5 systems.
 # so use the finer set of many small .so files.
-# 
+#
 # -pg version needs -ldl if -xnet is used only.
 #
 ifeq ($(shell uname),Darwin)
@@ -64,7 +63,7 @@ ifeq ($(shell uname),Linux)
    EXTLIBS = -ldl -lnsl -lm -lc -ltcl
    OS = linux
 endif
-LINKTARGET = skandr-$(OS)
+LINKTARGET = iterate_parse_tree_prettyprint-$(OS)
 
 # Link against -lz if compile flag VERIFIC_ENABLE_ZLIB is enabled (util/VerificSystem.h)
 ifneq ($(strip $(shell grep -l "^\#define VERIFIC_ENABLE_ZLIB" ../../../util/VerificSystem.h)),)
@@ -76,40 +75,36 @@ endif
 ##########################################################################
 # Stable for each Makefile
 
-#CFLAGS = -C relocation-model=static
-CFLAGS = -no-pie
-CFLAGS += -Wall
-CFLAGS += $(FLAGS)
+# BUILD NOTE: Unexpected behavior, including crashes, may occur if this
+#             test example is not built with the same compile-time switches
+#             that the verilog project library was built with.  Please
+#             look at ../verilog/Makefile (../verilog/VeriCompileFlags.h) to
+#             see which switches were set.
 
-CC = gcc 
+CFLAGS = -no-pie
+CFLAGS += $(FLAGS)
+#CFLAGS += -verilog_replace_const_exprs
 ifeq ($(CXX),)
-    CXX = g++ 
+    CXX = g++
 endif
 
 ##########################################################################
-# Now the make rules 
+# Now the make rules
 
 default: all
 
-.SUFFIXES: .c .cpp .o 
+.SUFFIXES: .c .cpp .o
 
 .cpp.o:
 	$(CXX) -c -I. $(patsubst %,-I../../../%,$(INCLUDE)) $(VERSION) $(CFLAGS) $<
 
-lib:
-ifdef ($(COMPILEDIRS)
-	for p in $(COMPILEDIRS); do \
-		$(MAKE) -C ../$$p VERSION=$(VERSION)  lib ;\
-	done
-endif
-
-$(LINKTARGET) : $(OBJECTS) lib 
+$(LINKTARGET) : $(OBJECTS)
 	$(CXX) $(VERSION) -o $(LINKTARGET) $(OBJECTS) $(patsubst %,../../../%/*-$(OS).$(LIB_EXT),$(LINKDIRS)) $(EXTLIBS)  $(CFLAGS)
 
-all : $(LINKTARGET) 
+all : $(LINKTARGET)
 
 # Header file dependency : All my headers, and all included dir's headers
-$(OBJECTS) : $(HEADERS) $(patsubst %,../../../%/*.h,$(INCLUDE)) 
- 
+$(OBJECTS) : $(HEADERS) $(patsubst %,../../../%/*.h,$(INCLUDE))
+
 clean:
 	rm -f $(LINKTARGET) $(OBJECTS)

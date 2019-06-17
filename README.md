@@ -1,1 +1,0 @@
-Create a folder in example/verilog and put these files there.

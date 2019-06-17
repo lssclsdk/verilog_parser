@@ -1,0 +1,11 @@
+module mAlu {
+
+
+input PC : bv8;
+input  ReadData1 : bv8;
+input  ReadData2 : bv8;
+input Instruction : bv15;
+input ALUSelA;
+input ALUSelB : [1:0];
+input ALUOp : [1:0];
+}
